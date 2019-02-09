@@ -1,5 +1,5 @@
-#ifndef RPS.h
-#define RPS.h
+#ifndef RPS_H
+#define RPS_H
 
 double wrkbuffer [1024];
 
@@ -34,6 +34,6 @@ typedef struct
     void (*learn_f) (pdata_t, toss_t, toss_t);
 } player_t;
 
-player_t* make_champion_player (player_t* p, int n)
+player_t* make_champion_player (player_t* p, int n);
 
 #endif

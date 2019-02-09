@@ -1,5 +1,8 @@
 #include "RPS.h"
 
+#include <math.h>
+#include <stdlib.h>
+
 // A history record. Can store a single
 // floating-point value (0) or a
 // recursive array. The value of n indicates this.
@@ -155,12 +158,12 @@ histrecord_t* force_entropy_calc (histrecord_t* h, int d)
     {
         for (int i = 0; i < h->n - 1; ++i)
             wrkbuffer[i] = h->inner[i].d;
-        h->inner[h->n - 1] = entropy (wrkbuffer, h->n - 1);
+        h->inner[h->n - 1].d = entropy (wrkbuffer, h->n - 1);
     }
     else
     {
         for (int i = 0; i < h->n - 1; ++i)
-            force_entropy_calc (h->inner + i);
+            force_entropy_calc (h->inner + i, d - 1);
     }
     return h;
 }
@@ -172,7 +175,7 @@ histrecord_t* force_entropy_calc (histrecord_t* h, int d)
 p_champion_t* make_champion (p_champion_t* p, int n)
 {
     p->hist_len = n * 2;
-    p->history = (int*) malloc (sizeof (toss) * n * 4);
+    p->history = (int*) malloc (sizeof (toss_t) * n * 4);
     p->h_index = 0;
     for (int i = 0; i < n * 2; ++i)
         p->history[i] = -1;
@@ -251,26 +254,26 @@ toss_t next_throw_champion (p_champion_t* c)
 
 toss_t choose_champion (pdata_t d)
 {
-    next_throw_champion((p_champion*) d);
+    next_throw_champion ((p_champion_t*) d);
 }
 
 histrecord_t* update_rec (histrecord_t* rec,
-                          toss op_play,
+                          toss_t op_play,
                           double mult)
 {
     for (int i = 0; i < 3; ++i)
     {
         switch (winner (i, op_play))
         {
-        case W_PONE:
+        case G_PONE:
             rec->inner[i].d =
                 ((mult - 1.0) * rec->inner[i].d + 1.0) / mult;
             break;
-        case W_PTWO:
+        case G_PTWO:
             rec->inner[i].d =
                 ((mult - 1.0) * rec->inner[i].d + 0.0) / mult;
             break;
-        case W_TIE:
+        case G_TIE:
             rec->inner[i].d =
                 ((mult - 1.0) * rec->inner[1].d + 1.0/3.0) / mult;
             break;
@@ -300,14 +303,15 @@ histrecord_t* rec_update (histrecord_t* rec,
     {
         if (hist[0] > -1)
             rec_update (rec->inner + hist[0], hist + 1, op_play, mult * sqrt (3), d - 1);
-        rec_update (rec->inner + 3, hist + 1, op+play, mult, d - 1);
+        rec_update (rec->inner + 3, hist + 1, op_play, mult, d - 1);
     }
     return rec;
 }
 
-void update_champion (p_champion_t* c, toss_t mp, toss_t op)
+void update_champion (pdata_t p, toss_t mp, toss_t op)
 {
-    rec_update(c->coeffs,
+    p_champion_t* c = (p_champion_t*) p;
+    rec_update(&c->coeffs,
                c->history + c->h_index,
                op, 1.0, c->hist_len);
     c->h_index = (c->h_index + 2) % c->hist_len;
@@ -317,8 +321,8 @@ void update_champion (p_champion_t* c, toss_t mp, toss_t op)
 
 player_t* make_champion_player (player_t* p, int n)
 {
-    p_champion_t* data = (p_champion_t) malloc (sizeof (p_champion_t));
-    make_champion(data, n);
+    p_champion_t* data = (p_champion_t*) malloc (sizeof (p_champion_t));
+    make_champion (data, n);
 
     p->data = data;
     p->choose_f = choose_champion;
