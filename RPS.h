@@ -32,8 +32,16 @@ typedef struct
 
     // learn_f : pdata, toss, toss | updates pdata
     void (*learn_f) (pdata_t, toss_t, toss_t);
+
+    // destory_f : pdata | destroys pdata
+    void (*destroy_f) (pdata_t);
 } player_t;
 
-player_t* make_champion_player (player_t* p, int n);
+// the following are functions for creating different
+// types of players.
+player_t* make_champion_player (player_t* p, int argv, char** args);
+
+// the following are functions for general interface interactions.
+void post_error (const char* msg);
 
 #endif

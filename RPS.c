@@ -20,3 +20,7 @@ gres_t winner (toss_t p1, toss_t p2)
     return G_TIE;
 }
 
+void post_error(const char* err)
+{
+    //TODO: actually post errors
+}

@@ -252,7 +252,7 @@ toss_t next_throw_champion (p_champion_t* c)
     return SCISSORS;
 }
 
-toss_t choose_champion (pdata_t d)
+toss_t choose_champion_player (pdata_t d)
 {
     next_throw_champion ((p_champion_t*) d);
 }
@@ -308,7 +308,7 @@ histrecord_t* rec_update (histrecord_t* rec,
     return rec;
 }
 
-void update_champion (pdata_t p, toss_t mp, toss_t op)
+void learn_champion_player (pdata_t p, toss_t mp, toss_t op)
 {
     p_champion_t* c = (p_champion_t*) p;
     rec_update(&c->coeffs,
@@ -319,12 +319,48 @@ void update_champion (pdata_t p, toss_t mp, toss_t op)
     c->history[c->hist_len - 1] = mp;
 }
 
-player_t* make_champion_player (player_t* p, int n)
+void destory_hr_recurse (histrecord_t* rec)
 {
+    if (rec->n > 0)
+	for (int i = 0; i < rec->n; ++i)
+	    destroy_hr_recurse (rec->inner + i);
+    free (rec);
+}
+void destory_champion_player (pdata p)
+{
+    p_champion_t* data = (p_champion_t*) p;
+    
+    free (data->history);
+    for (int i = 0; i < data->coeffs.n; ++i)
+	destroy_hr_recurse (data->coeffs.inner + i);
+}
+
+player_t* make_champion_player (player_t* p, int argc, char** args)
+{
+    int n = 3;
+    if (argc > 1 && 0 == strcmp (args[0], "-lkbk"))
+    {
+	n = strtoi (args[1], -1);
+	
+	if (n < 0)
+	{
+	    post_error ("Invalid argument for lookback value; "
+			    "must be a nonnegative integer.\n");
+	    return NULL;
+	}
+    }
+    else if (argc > 0)
+    {
+	post_error ("Invalid argument for make_champion_player; "
+			"only accepts -lkbk [n] for nonnegative [n].\n");
+	return NULL;
+    }
+
     p_champion_t* data = (p_champion_t*) malloc (sizeof (p_champion_t));
     make_champion (data, n);
 
     p->data = data;
-    p->choose_f = choose_champion;
-    p->learn_f = update_champion;
+    p->choose_f = choose_champion_player;
+    p->learn_f = update_champion_player;
+    p->destroy_f = destroy_champion_player;
 }
