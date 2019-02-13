@@ -20,6 +20,7 @@ This section concerns all work on any general-purpose front-end **documentation*
    * the date and author of the creation of the document,
    * the date and author(s) of the first published version of the document, and
    * the date, author, and sections affected of any subsequent revisions of the document.
+   
    The _Credit_ section may additionally list any other notable contributions.
 
 ### 1.2 In-code Documentation
